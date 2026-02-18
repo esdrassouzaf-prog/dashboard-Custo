@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Controle de Tintas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --secondary: #f59e0b;
+            --danger: #ef4444;
+            --success: #10b981;
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --text: #1f2937;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px;
+        }
+
+        .logo-container {
+            margin-bottom: 20px;
+        }
+
+        .logo-container img {
+            max-height: 150px;
+            max-width: 350px;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+            border-radius: 10px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .connection-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.offline {
+            background: var(--danger);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 968px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .logo-container img {
+                max-height: 100px;
+                max-width: 250px;
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: var(--primary);
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .config-section {
+            background: #f0f9ff;
+            border: 2px solid #bae6fd;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .config-section h3 {
+            color: #0369a1;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(30, 58, 138, 0.3);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            width: auto;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .filter-section {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 2px solid var(--border);
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .search-box input {
+            padding-left: 45px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            min-width: 600px;
+        }
+
+        th {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-blue {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .cost {
+            font-weight: bold;
+            color: var(--success);
+            font-size: 1.1rem;
+        }
+
+        .date {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--success);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .info-box {
+            background: #fef3c7;
+            border-left: 4px solid var(--secondary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .sync-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f3f4f6;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        @media print {
+            body { background: white; }
+            .no-print { display: none !important; }
+            .card { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <!-- LOGO DA EMPRESA - IMGUR -->
+            <div class="logo-container">
+                <img src="https://i.imgur.com/9Uv6GTe.png" 
+                     alt="Logo Empresa" 
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div style="display: none; font-size: 4rem;">🎨</div>
+            </div>
+            
+            <h1>Dashboard de Controle de Tintas</h1>
+            <p>Sincronizado com Google Sheets em tempo real</p>
+            <div class="connection-status" id="connectionStatus">
+                <span class="status-dot offline" id="statusDot"></span>
+                <span id="statusText">Desconectado do Sheets</span>
+            </div>
+        </header>
+
+        <div class="main-grid">
+            <div class="card no-print">
+                <h2>⚙️ Configuração do Sheets</h2>
+                
+                <div class="config-section">
+                    <h3>🔑 Dados da API</h3>
+                    <div class="form-group">
+                        <label for="apiKey">Chave da API Google</label>
+                        <input type="password" id="apiKey" placeholder="Cole sua chave aqui...">
+                    </div>
+                    <div class="form-group">
+                        <label for="sheetId">ID da Planilha</label>
+                        <input type="text" id="sheetId" placeholder="Cole o ID da planilha...">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveConfig()" id="saveConfigBtn">
+                        💾 Salvar Configuração
+                    </button>
+                </div>
+
+                <div class="info-box">
+                    <strong>ℹ️ Como obter:</strong><br>
+                    1. Chave API: Google Cloud Console → APIs & Serviços → Credenciais<br>
+                    2. ID da Planilha: URL do Sheets entre /d/ e /edit
+                </div>
+
+                <button class="btn btn-success" onclick="loadFromSheets()" id="syncBtn">
+                    🔄 Sincronizar Agora
+                </button>
+
+                <div class="sync-info">
+                    <span>💡 Dados atualizados automaticamente do Google Sheets</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📋 Dados Sincronizados</h2>
+                
+                <div class="filter-section no-print">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="searchInput" placeholder="Pesquisar por ID do produto..." onkeyup="filterProducts()">
+                    </div>
+                    
+                    <div class="filter-row">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 0.8rem;">Data Inicial</label>
+                            <input type="date" id="dateStart" onchange="filterProducts()">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 0.8rem;">Data Final</label>
+                            <input type="date" id="dateEnd" onchange="filterProducts()">
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-primary" onclick="clearFilters()" style="flex: 1;">
+                            🔄 Limpar Filtros
+                        </button>
+                        <button class="btn btn-primary" onclick="window.print()" style="flex: 1; background: var(--secondary);">
+                            🖨️ Imprimir
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="productsTable">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Lote</th>
+                                <th>Fabricação</th>
+                                <th>Custo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                        </tbody>
+                    </table>
+                    
+                    <div id="emptyState" class="empty-state">
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity: 0.3; margin-bottom: 20px;">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                        </svg>
+                        <h3>Nenhum dado carregado</h3>
+                        <p>Configure a API do Google Sheets e clique em "Sincronizar Agora"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Configuração e estado
+        let products = JSON.parse(localStorage.getItem('tintas_products')) || [];
+        let config = JSON.parse(localStorage.getItem('tintas_config')) || {};
+        let isLoading = false;
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            // Carregar configuração salva
+            if (config.apiKey) {
+                document.getElementById('apiKey').value = config.apiKey;
+            }
+            if (config.sheetId) {
+                document.getElementById('sheetId').value = config.sheetId;
+                updateConnectionStatus(true);
+            }
+            
+            renderTable();
+            
+            // Definir datas padrão nos filtros
+            const today = new Date();
+            const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+            document.getElementById('dateEnd').valueAsDate = today;
+            document.getElementById('dateStart').valueAsDate = lastMonth;
+            
+            // Tentar carregar automaticamente se tiver configuração
+            if (config.apiKey && config.sheetId && products.length === 0) {
+                loadFromSheets();
+            }
+        });
+
+        // Salvar configuração
+        function saveConfig() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const sheetId = document.getElementById('sheetId').value.trim();
+            
+            if (!apiKey || !sheetId) {
+                showToast('Preencha a chave da API e o ID da planilha!', true);
+                return;
+            }
+            
+            config = { apiKey, sheetId };
+            localStorage.setItem('tintas_config', JSON.stringify(config));
+            showToast('Configuração salva com sucesso!');
+            updateConnectionStatus(true);
+        }
+
+        // Carregar dados do Google Sheets
+        async function loadFromSheets() {
+            if (!config.apiKey || !config.sheetId) {
+                showToast('Configure a API primeiro!', true);
+                return;
+            }
+            
+            if (isLoading) return;
+            
+            isLoading = true;
+            const btn = document.getElementById('syncBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="loading"></span> Sincronizando...';
+            btn.disabled = true;
+            
+            try {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${config.sheetId}/values/Dados!A1:D1000?key=${config.apiKey}`;
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Erro ${response.status}: ${errorData.error?.message || 'Desconhecido'}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.values || data.values.length < 2) {
+                    throw new Error('Nenhum dado encontrado na planilha');
+                }
+                
+                // Processar dados (pular cabeçalho na linha 0)
+                const rows = data.values.slice(1);
+                products = [];
+                
+                rows.forEach((row, index) => {
+                    if (row.length >= 4 && row[0]) {
+                        try {
+                            let cost = 0;
+                            const costValue = row[3] ? row[3].toString().replace('R$', '').replace(/\./g, '').replace(',', '.').trim() : '0';
+                            cost = parseFloat(costValue) || 0;
+                            
+                            let dateStr = row[2] || '';
+                            if (dateStr.includes('/')) {
+                                const parts = dateStr.split('/');
+                                if (parts.length === 3) {
+                                    dateStr = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                                }
+                            }
+                            
+                            products.push({
+                                id: `sheet_${index}_${Date.now()}`,
+                                productId: row[0].toString().trim().toUpperCase(),
+                                batch: row[1] ? row[1].toString().trim().toUpperCase() : '',
+                                manufactureDate: dateStr,
+                                cost: cost,
+                                importedAt: new Date().toISOString()
+                            });
+                        } catch (err) {
+                            console.error('Erro ao processar linha', index, err);
+                        }
+                    }
+                });
+                
+                saveData();
+                updateConnectionStatus(true);
+                renderTable();
+                showToast(`Sincronizado! ${products.length} produtos carregados.`);
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                showToast('Erro ao sincronizar: ' + error.message, true);
+                updateConnectionStatus(false);
+            } finally {
+                isLoading = false;
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Atualizar status de conexão
+        function updateConnectionStatus(connected) {
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            
+            if (connected) {
+                dot.classList.remove('offline');
+                text.textContent = 'Conectado ao Sheets';
+            } else {
+                dot.classList.add('offline');
+                text.textContent = 'Desconectado do Sheets';
+            }
+        }
+
+        // Renderizar tabela
+        function renderTable(data = products) {
+            const tbody = document.getElementById('tableBody');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            // Ordenar por data (mais recente primeiro)
+            const sortedData = [...data].sort((a, b) => 
+                new Date(b.manufactureDate) - new Date(a.manufactureDate)
+            );
+            
+            tbody.innerHTML = sortedData.map(product => `
+                <tr>
+                    <td><span class="badge badge-blue">${escapeHtml(product.productId)}</span></td>
+                    <td><strong>${escapeHtml(product.batch)}</strong></td>
+                    <td class="date">${formatDate(product.manufactureDate)}</td>
+                    <td class="cost">R$ ${product.cost.toFixed(2).replace('.', ',')}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Filtrar produtos
+        function filterProducts() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const dateStart = document.getElementById('dateStart').value;
+            const dateEnd = document.getElementById('dateEnd').value;
+            
+            let filtered = products.filter(product => {
+                const matchSearch = product.productId.toLowerCase().includes(search) || 
+                                   product.batch.toLowerCase().includes(search);
+                
+                let matchDate = true;
+                if (dateStart && dateEnd && product.manufactureDate) {
+                    const prodDate = new Date(product.manufactureDate);
+                    const start = new Date(dateStart);
+                    const end = new Date(dateEnd);
+                    end.setHours(23, 59, 59);
+                    matchDate = prodDate >= start && prodDate <= end;
+                }
+                
+                return matchSearch && matchDate;
+            });
+            
+            renderTable(filtered);
+        }
+
+        // Limpar filtros
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('dateStart').value = '';
+            document.getElementById('dateEnd').value = '';
+            renderTable(products);
+        }
+
+        // Salvar no LocalStorage
+        function saveData() {
+            localStorage.setItem('tintas_products', JSON.stringify(products));
+        }
+
+        // Utilitários
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('pt-BR');
+            } catch {
+                return dateString;
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Atalhos de teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                if (config.apiKey && config.sheetId) loadFromSheets();
+            }
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+            }
+        });
+    </script>
+</body>
+</html>
