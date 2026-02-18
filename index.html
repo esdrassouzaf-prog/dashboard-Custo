@@ -382,6 +382,30 @@
             color: #6b7280;
         }
 
+        .saved-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--success);
+            font-size: 0.85rem;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .first-time-warning {
+            background: #fef3c7;
+            border: 2px solid var(--secondary);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .first-time-warning h3 {
+            color: #92400e;
+            margin-bottom: 10px;
+        }
+
         @media print {
             body { background: white; }
             .no-print { display: none !important; }
@@ -411,6 +435,18 @@
         <div class="main-grid">
             <div class="card no-print">
                 <h2>⚙️ Configuração do Sheets</h2>
+                
+                <!-- Aviso para primeira configuração -->
+                <div id="firstTimeWarning" class="first-time-warning" style="display: none;">
+                    <h3>🔧 Primeira Configuração</h3>
+                    <p>Insira a chave da API e o ID da planilha abaixo.<br>
+                    Estes dados serão salvos automaticamente neste dispositivo.</p>
+                </div>
+
+                <!-- Aviso de dados salvos -->
+                <div id="savedIndicator" class="saved-indicator" style="display: none;">
+                    ✅ Configuração salva neste dispositivo
+                </div>
                 
                 <div class="config-section">
                     <h3>🔑 Dados da API</h3>
@@ -510,28 +546,42 @@
 
         // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
-            // Carregar configuração salva
-            if (config.apiKey) {
-                document.getElementById('apiKey').value = config.apiKey;
-            }
-            if (config.sheetId) {
-                document.getElementById('sheetId').value = config.sheetId;
+            const apiKeyInput = document.getElementById('apiKey');
+            const sheetIdInput = document.getElementById('sheetId');
+            const firstTimeWarning = document.getElementById('firstTimeWarning');
+            const savedIndicator = document.getElementById('savedIndicator');
+            
+            // Verificar se tem configuração salva
+            if (config.apiKey && config.sheetId) {
+                // Tem configuração - preencher campos e mostrar indicador
+                apiKeyInput.value = config.apiKey;
+                sheetIdInput.value = config.sheetId;
+                savedIndicator.style.display = 'inline-flex';
                 updateConnectionStatus(true);
+                
+                // Tentar carregar dados automaticamente
+                renderTable();
+                setDefaultDates();
+                
+                // Carregar automaticamente se não tiver dados
+                if (products.length === 0) {
+                    setTimeout(() => loadFromSheets(), 500); // Pequeno delay para não travar a interface
+                }
+            } else {
+                // Não tem configuração - mostrar aviso de primeira vez
+                firstTimeWarning.style.display = 'block';
+                renderTable();
+                setDefaultDates();
             }
-            
-            renderTable();
-            
-            // Definir datas padrão nos filtros
+        });
+
+        // Definir datas padrão nos filtros
+        function setDefaultDates() {
             const today = new Date();
             const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
             document.getElementById('dateEnd').valueAsDate = today;
             document.getElementById('dateStart').valueAsDate = lastMonth;
-            
-            // Tentar carregar automaticamente se tiver configuração
-            if (config.apiKey && config.sheetId && products.length === 0) {
-                loadFromSheets();
-            }
-        });
+        }
 
         // Salvar configuração
         function saveConfig() {
@@ -545,7 +595,12 @@
             
             config = { apiKey, sheetId };
             localStorage.setItem('tintas_config', JSON.stringify(config));
-            showToast('Configuração salva com sucesso!');
+            
+            // Atualizar interface
+            document.getElementById('firstTimeWarning').style.display = 'none';
+            document.getElementById('savedIndicator').style.display = 'inline-flex';
+            
+            showToast('✅ Configuração salva! Próximas vezes carregarão automaticamente.');
             updateConnectionStatus(true);
         }
 
@@ -553,6 +608,7 @@
         async function loadFromSheets() {
             if (!config.apiKey || !config.sheetId) {
                 showToast('Configure a API primeiro!', true);
+                document.getElementById('firstTimeWarning').style.display = 'block';
                 return;
             }
             
@@ -616,11 +672,11 @@
                 saveData();
                 updateConnectionStatus(true);
                 renderTable();
-                showToast(`Sincronizado! ${products.length} produtos carregados.`);
+                showToast(`✅ Sincronizado! ${products.length} produtos carregados.`);
                 
             } catch (error) {
                 console.error('Erro:', error);
-                showToast('Erro ao sincronizar: ' + error.message, true);
+                showToast('❌ Erro ao sincronizar: ' + error.message, true);
                 updateConnectionStatus(false);
             } finally {
                 isLoading = false;
